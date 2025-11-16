@@ -116,7 +116,8 @@ if ('serviceWorker' in navigator) {
 
 function getResponsiveDimensions({ rows: preferredRows, cols: preferredCols }) {
   const width = window.innerWidth;
-  const breakpoint = RESPONSIVE_BREAKPOINTS.find((bp) => width <= bp.width) || RESPONSIVE_BREAKPOINTS.at(-1);
+  const fallbackBreakpoint = RESPONSIVE_BREAKPOINTS[RESPONSIVE_BREAKPOINTS.length - 1];
+  const breakpoint = RESPONSIVE_BREAKPOINTS.find((bp) => width <= bp.width) || fallbackBreakpoint;
   const cols = Math.max(
     MIN_ROWS,
     Math.min(preferredCols, breakpoint.cols || preferredCols, getMaxColsByViewport())
