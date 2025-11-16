@@ -20,6 +20,7 @@ body {
   min-height: 100vh;
   background: radial-gradient(circle at 30% 20%, #0a1125 0%, #04060c 55%, #02030a 100%);
   color: var(--text);
+  touch-action: manipulation;
 }
 
 .wrapper {
@@ -136,6 +137,7 @@ body {
   grid-template-columns: repeat(var(--cols, 12), minmax(0, var(--bubble-size)));
   justify-content: center;
   gap: clamp(0.45rem, 1vw, 0.8rem);
+  touch-action: none;
 }
 
 .bubble {
@@ -149,6 +151,11 @@ body {
   cursor: pointer;
   padding: 0;
   transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .bubble .bubble-face {

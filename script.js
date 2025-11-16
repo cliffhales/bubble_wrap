@@ -40,6 +40,8 @@ let soundEnabled = true;
 let audioContext;
 let variantIndex = 0;
 let currentDimensions = SIZE_VARIANTS[variantIndex];
+let gestureActive = false;
+let gestureShouldPop = true;
 
 soundToggle.addEventListener('change', (event) => {
   soundEnabled = event.target.checked;
@@ -52,28 +54,77 @@ newSheetButton.addEventListener('click', () => {
 });
 
 window.addEventListener('resize', debounce(() => createSheet(), 200));
-window.addEventListener(
-  'pointerdown',
-  () => {
-    ensureAudioContext();
-  },
-  { once: true }
-);
+primeAudioOnFirstInteraction();
+
+sheetEl.addEventListener('pointerdown', handlePointerDown);
+sheetEl.addEventListener('pointerover', handlePointerDrag);
+sheetEl.addEventListener('pointerenter', handlePointerDrag);
+window.addEventListener('pointerup', endGesture);
+window.addEventListener('pointercancel', endGesture);
 
 sheetEl.addEventListener('click', (event) => {
+  if (event.detail !== 0) {
+    return;
+  }
+
   const bubble = event.target.closest('.bubble');
   if (!bubble) {
     return;
   }
 
-  const isPopped = bubble.classList.toggle('popped');
-  bubble.setAttribute('aria-pressed', String(isPopped));
-  bubble.setAttribute('aria-label', isPopped ? 'Popped bubble' : 'Bubble reset');
+  const shouldPop = !bubble.classList.contains('popped');
+  applyBubbleState(bubble, shouldPop);
+});
+
+function handlePointerDown(event) {
+  if (event.pointerType === 'mouse' && event.button !== 0) {
+    return;
+  }
+
+  const bubble = event.target.closest('.bubble');
+  if (!bubble) {
+    return;
+  }
+
+  gestureActive = true;
+  gestureShouldPop = !bubble.classList.contains('popped');
+  event.preventDefault();
+  applyBubbleState(bubble, gestureShouldPop);
+}
+
+function handlePointerDrag(event) {
+  if (!gestureActive) {
+    return;
+  }
+
+  const bubble = event.target.closest('.bubble');
+  if (!bubble) {
+    return;
+  }
+
+  applyBubbleState(bubble, gestureShouldPop);
+}
+
+function endGesture() {
+  gestureActive = false;
+}
+
+function applyBubbleState(bubble, shouldPop) {
+  const alreadyPopped = bubble.classList.contains('popped');
+  if (alreadyPopped === shouldPop) {
+    return false;
+  }
+
+  bubble.classList.toggle('popped', shouldPop);
+  bubble.setAttribute('aria-pressed', String(shouldPop));
+  bubble.setAttribute('aria-label', shouldPop ? 'Popped bubble' : 'Bubble reset');
 
   if (soundEnabled) {
-    playPopSound(isPopped ? 'pop' : 'reset');
+    playPopSound(shouldPop ? 'pop' : 'reset');
   }
-});
+
+  return true;
+}
 
 function createSheet() {
   const { rows, cols } = getResponsiveDimensions(currentDimensions);
@@ -139,6 +190,19 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker
       .register('./sw.js')
       .catch((error) => console.error('Service worker registration failed:', error));
+  });
+}
+
+function primeAudioOnFirstInteraction() {
+  const interactionEvents = ['pointerdown', 'touchstart', 'mousedown', 'keydown'];
+  interactionEvents.forEach((eventName) => {
+    window.addEventListener(
+      eventName,
+      () => {
+        ensureAudioContext();
+      },
+      { once: true, passive: true }
+    );
   });
 }
 
