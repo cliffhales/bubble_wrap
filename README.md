@@ -16,4 +16,10 @@ npx serve .
 - Click or tap bubbles to pop them; keyboard accessible
 - Toggleable synthesized pop sound
 - "New sheet" button rotates through a few grid sizes for variety
-- Ready to host on GitHub Pages—just publish the `main` branch as a static site
+- Installable PWA with offline cache, manifest, and icons
+
+## PWA notes
+
+- A service worker (`sw.js`) precaches the core assets and provides a cache-first strategy.
+- The manifest + icons enable install prompts and better integration inside WebViews.
+- When updating assets, bump the `CACHE_NAME` constant in `sw.js` to ensure clients fetch the new files.
