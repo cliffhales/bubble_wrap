@@ -11,7 +11,25 @@ const RESPONSIVE_BREAKPOINTS = [
   { width: 1024, cols: 12 },
   { width: Infinity, cols: 14 },
 ];
-const MIN_ROWS = 4;
+const MIN_ROWS = 6;
+const SOUND_VARIANTS = {
+  pop: {
+    type: 'triangle',
+    startFrequency: 280,
+    endFrequency: 110,
+    duration: 0.14,
+    startGain: 0.28,
+    release: 0.18,
+  },
+  reset: {
+    type: 'sine',
+    startFrequency: 130,
+    endFrequency: 260,
+    duration: 0.12,
+    startGain: 0.16,
+    release: 0.16,
+  },
+};
 
 const sheetEl = document.getElementById('sheet');
 const template = document.getElementById('bubble-template');
@@ -34,19 +52,26 @@ newSheetButton.addEventListener('click', () => {
 });
 
 window.addEventListener('resize', debounce(() => createSheet(), 200));
+window.addEventListener(
+  'pointerdown',
+  () => {
+    ensureAudioContext();
+  },
+  { once: true }
+);
 
 sheetEl.addEventListener('click', (event) => {
   const bubble = event.target.closest('.bubble');
-  if (!bubble || bubble.classList.contains('popped')) {
+  if (!bubble) {
     return;
   }
 
-  bubble.classList.add('popped');
-  bubble.setAttribute('aria-pressed', 'true');
-  bubble.setAttribute('aria-label', 'Popped bubble');
+  const isPopped = bubble.classList.toggle('popped');
+  bubble.setAttribute('aria-pressed', String(isPopped));
+  bubble.setAttribute('aria-label', isPopped ? 'Popped bubble' : 'Bubble reset');
 
   if (soundEnabled) {
-    playPopSound();
+    playPopSound(isPopped ? 'pop' : 'reset');
   }
 });
 
@@ -83,25 +108,28 @@ function ensureAudioContext() {
   return audioContext;
 }
 
-function playPopSound() {
+function playPopSound(type = 'pop') {
   const ctx = ensureAudioContext();
   if (!ctx) return;
 
+  const profile = SOUND_VARIANTS[type] || SOUND_VARIANTS.pop;
   const now = ctx.currentTime;
-
   const oscillator = ctx.createOscillator();
   const gain = ctx.createGain();
 
-  oscillator.type = 'triangle';
-  oscillator.frequency.setValueAtTime(180, now);
-  oscillator.frequency.exponentialRampToValueAtTime(90, now + 0.1);
+  oscillator.type = profile.type;
+  oscillator.frequency.setValueAtTime(profile.startFrequency, now);
+  oscillator.frequency.exponentialRampToValueAtTime(
+    profile.endFrequency,
+    now + profile.duration
+  );
 
-  gain.gain.setValueAtTime(0.2, now);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+  gain.gain.setValueAtTime(profile.startGain, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + profile.release);
 
   oscillator.connect(gain).connect(ctx.destination);
   oscillator.start(now);
-  oscillator.stop(now + 0.22);
+  oscillator.stop(now + Math.max(profile.duration, profile.release) + 0.05);
 }
 
 createSheet();
@@ -133,15 +161,17 @@ function getMaxColsByViewport() {
   const width = sheetEl.clientWidth || window.innerWidth;
   const styles = window.getComputedStyle(sheetEl);
   const gap = parseFloat(styles.columnGap || styles.gap || 12);
-  const bubbleSize = clamp(window.innerWidth * 0.06, 48, 64);
+  const bubbleSize = clamp(window.innerWidth * 0.06, 42, 64);
   const total = Math.max(1, Math.floor(width / (bubbleSize + gap)));
   return Math.max(4, total);
 }
 
 function getMaxRowsByViewport() {
-  const heightAvailable = window.innerHeight - sheetEl.getBoundingClientRect().top - 40;
-  const bubbleSize = clamp(window.innerWidth * 0.06, 48, 64);
-  const total = Math.max(1, Math.floor(heightAvailable / (bubbleSize + 12)));
+  const rect = sheetEl.getBoundingClientRect();
+  const minViewportShare = window.innerHeight * 0.55;
+  const availableHeight = Math.max(minViewportShare, window.innerHeight - (rect.top || 0) - 24);
+  const bubbleSize = clamp(window.innerWidth * 0.06, 42, 64);
+  const total = Math.max(1, Math.floor(availableHeight / (bubbleSize + 12)));
   return Math.max(MIN_ROWS, total);
 }
 

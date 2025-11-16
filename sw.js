@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bubble-wrap-v1';
+const CACHE_NAME = 'bubble-wrap-v2';
 const OFFLINE_ASSETS = [
   './',
   './index.html',

@@ -13,7 +13,7 @@ npx serve .
 ## Features
 
 - Responsive sheet layout with subtle glassmorphism styling
-- Click or tap bubbles to pop them; keyboard accessible
+- Tap to pop, tap again to reset—each state has its own synthesized sound, and everything is keyboard accessible
 - Toggleable synthesized pop sound
 - "New sheet" button rotates through a few grid sizes for variety
 - Installable PWA with offline cache, manifest, and icons
