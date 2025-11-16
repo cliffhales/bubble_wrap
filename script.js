@@ -1,9 +1,17 @@
-const DEFAULT_DIMENSIONS = { rows: 10, cols: 14 };
 const SIZE_VARIANTS = [
   { rows: 10, cols: 14 },
   { rows: 8, cols: 12 },
   { rows: 12, cols: 16 },
 ];
+const RESPONSIVE_BREAKPOINTS = [
+  { width: 420, cols: 5 },
+  { width: 520, cols: 6 },
+  { width: 640, cols: 8 },
+  { width: 820, cols: 10 },
+  { width: 1024, cols: 12 },
+  { width: Infinity, cols: 14 },
+];
+const MIN_ROWS = 4;
 
 const sheetEl = document.getElementById('sheet');
 const template = document.getElementById('bubble-template');
@@ -13,6 +21,7 @@ const newSheetButton = document.getElementById('new-sheet');
 let soundEnabled = true;
 let audioContext;
 let variantIndex = 0;
+let currentDimensions = SIZE_VARIANTS[variantIndex];
 
 soundToggle.addEventListener('change', (event) => {
   soundEnabled = event.target.checked;
@@ -20,9 +29,11 @@ soundToggle.addEventListener('change', (event) => {
 
 newSheetButton.addEventListener('click', () => {
   variantIndex = (variantIndex + 1) % SIZE_VARIANTS.length;
-  const { rows, cols } = SIZE_VARIANTS[variantIndex];
-  createSheet(rows, cols);
+  currentDimensions = SIZE_VARIANTS[variantIndex];
+  createSheet();
 });
+
+window.addEventListener('resize', debounce(() => createSheet(), 200));
 
 sheetEl.addEventListener('click', (event) => {
   const bubble = event.target.closest('.bubble');
@@ -39,7 +50,8 @@ sheetEl.addEventListener('click', (event) => {
   }
 });
 
-function createSheet(rows = DEFAULT_DIMENSIONS.rows, cols = DEFAULT_DIMENSIONS.cols) {
+function createSheet() {
+  const { rows, cols } = getResponsiveDimensions(currentDimensions);
   sheetEl.style.setProperty('--cols', cols);
   sheetEl.replaceChildren();
 
@@ -100,4 +112,46 @@ if ('serviceWorker' in navigator) {
       .register('./sw.js')
       .catch((error) => console.error('Service worker registration failed:', error));
   });
+}
+
+function getResponsiveDimensions({ rows: preferredRows, cols: preferredCols }) {
+  const width = window.innerWidth;
+  const breakpoint = RESPONSIVE_BREAKPOINTS.find((bp) => width <= bp.width) || RESPONSIVE_BREAKPOINTS.at(-1);
+  const cols = Math.max(
+    MIN_ROWS,
+    Math.min(preferredCols, breakpoint.cols || preferredCols, getMaxColsByViewport())
+  );
+  const scale = cols / preferredCols;
+  const scaledRows = Math.max(MIN_ROWS, Math.round(preferredRows * scale));
+  const maxRowsByViewport = getMaxRowsByViewport();
+  const rows = Math.min(scaledRows, maxRowsByViewport);
+  return { rows, cols };
+}
+
+function getMaxColsByViewport() {
+  const width = sheetEl.clientWidth || window.innerWidth;
+  const styles = window.getComputedStyle(sheetEl);
+  const gap = parseFloat(styles.columnGap || styles.gap || 12);
+  const bubbleSize = clamp(window.innerWidth * 0.06, 48, 64);
+  const total = Math.max(1, Math.floor(width / (bubbleSize + gap)));
+  return Math.max(4, total);
+}
+
+function getMaxRowsByViewport() {
+  const heightAvailable = window.innerHeight - sheetEl.getBoundingClientRect().top - 40;
+  const bubbleSize = clamp(window.innerWidth * 0.06, 48, 64);
+  const total = Math.max(1, Math.floor(heightAvailable / (bubbleSize + 12)));
+  return Math.max(MIN_ROWS, total);
+}
+
+function debounce(fn, delay) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => fn.apply(null, args), delay);
+  };
+}
+
+function clamp(value, min, max) {
+  return Math.min(Math.max(value, min), max);
 }
