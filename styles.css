@@ -1,0 +1,195 @@
+:root {
+  color-scheme: dark;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  --bg: #05070f;
+  --panel: rgba(9, 13, 24, 0.85);
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --accent: #7c5dff;
+  --accent-soft: rgba(124, 93, 255, 0.15);
+  --text: #f5f7ff;
+  --subtle: rgba(245, 247, 255, 0.65);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at 30% 20%, #0a1125 0%, #04060c 55%, #02030a 100%);
+  color: var(--text);
+}
+
+.wrapper {
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 2rem clamp(1rem, 3vw, 3rem) 4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 24px;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 20px 50px rgba(3, 5, 12, 0.55);
+}
+
+header h1 {
+  margin: 0.2rem 0 0.4rem;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+}
+
+header .eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.75rem;
+  color: var(--subtle);
+}
+
+header .lede {
+  margin: 0;
+  max-width: 50ch;
+  color: var(--subtle);
+  line-height: 1.6;
+}
+
+.controls {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+#new-sheet {
+  border: 0;
+  padding: 0.75rem 1.5rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 600;
+  background: linear-gradient(135deg, #9475ff, #5ed1ff);
+  color: var(--bg);
+  cursor: pointer;
+  box-shadow: 0 10px 20px rgba(92, 138, 255, 0.35);
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+#new-sheet:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 25px rgba(92, 138, 255, 0.4);
+}
+
+#new-sheet:active {
+  transform: translateY(1px);
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 500;
+  color: var(--subtle);
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggle .track {
+  --size: 44px;
+  width: var(--size);
+  height: 24px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  position: relative;
+  transition: background 160ms ease;
+}
+
+.toggle .track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: #fff;
+  transition: transform 160ms ease;
+  box-shadow: 0 2px 5px rgba(3, 6, 20, 0.35);
+}
+
+.toggle input:checked + .track {
+  background: rgba(146, 122, 255, 0.8);
+}
+
+.toggle input:checked + .track::after {
+  transform: translateX(20px);
+}
+
+.toggle .label {
+  font-size: 0.95rem;
+}
+
+.sheet {
+  border-radius: 34px;
+  padding: clamp(1rem, 3vw, 2rem);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(2, 5, 15, 0.5));
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 12), minmax(0, 64px));
+  justify-content: center;
+  gap: clamp(0.6rem, 1vw, 0.9rem);
+}
+
+.bubble {
+  position: relative;
+  width: clamp(48px, 8vw, 64px);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  border: none;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.7), rgba(124, 93, 255, 0.4) 40%, rgba(20, 27, 62, 0.9) 100%);
+  box-shadow: inset 0 8px 12px rgba(255, 255, 255, 0.25), inset 0 -8px 20px rgba(4, 6, 15, 0.85), 0 12px 18px rgba(6, 10, 26, 0.5);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+}
+
+.bubble .bubble-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.bubble:focus-visible {
+  outline: 3px solid rgba(120, 137, 255, 0.8);
+  outline-offset: 3px;
+}
+
+.bubble:not(.popped):active {
+  transform: translateY(3px);
+}
+
+.bubble.popped {
+  transform: translateY(6px) scale(0.96);
+  box-shadow: inset 0 10px 16px rgba(3, 6, 18, 0.9);
+  filter: grayscale(0.55);
+}
+
+@media (max-width: 640px) {
+  .sheet {
+    gap: 0.5rem;
+    border-radius: 16px;
+  }
+}

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bubble Wrap Oasis</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="wrapper">
+      <section class="panel">
+        <header>
+          <p class="eyebrow">digital fidget toy</p>
+          <h1>Bubble Wrap Oasis</h1>
+          <p class="lede">
+            Tap the bubbles to pop them, toggle the sound, and refresh for a brand
+            new sheet whenever you need a quick break.
+          </p>
+        </header>
+        <div class="controls">
+          <label class="toggle">
+            <input type="checkbox" id="sound-toggle" checked />
+            <span class="track"></span>
+            <span class="label">Sound</span>
+          </label>
+          <button id="new-sheet" type="button">
+            New sheet
+          </button>
+        </div>
+      </section>
+      <section class="sheet" aria-live="polite" aria-label="Bubble wrap sheet" id="sheet"></section>
+    </main>
+    <template id="bubble-template">
+      <button class="bubble" type="button" aria-pressed="false" aria-label="Bubble">
+        <span class="bubble-face"></span>
+      </button>
+    </template>
+    <script src="script.js" type="module"></script>
+  </body>
+</html>
