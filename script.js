@@ -57,8 +57,7 @@ window.addEventListener('resize', debounce(() => createSheet(), 200));
 primeAudioOnFirstInteraction();
 
 sheetEl.addEventListener('pointerdown', handlePointerDown);
-sheetEl.addEventListener('pointerover', handlePointerDrag);
-sheetEl.addEventListener('pointerenter', handlePointerDrag);
+window.addEventListener('pointermove', handlePointerDrag);
 window.addEventListener('pointerup', endGesture);
 window.addEventListener('pointercancel', endGesture);
 
@@ -88,6 +87,7 @@ function handlePointerDown(event) {
 
   gestureActive = true;
   gestureShouldPop = !bubble.classList.contains('popped');
+  // Prevent default to avoid scrolling on touch devices while dragging on bubbles
   event.preventDefault();
   applyBubbleState(bubble, gestureShouldPop);
 }
@@ -97,8 +97,17 @@ function handlePointerDrag(event) {
     return;
   }
 
-  const bubble = event.target.closest('.bubble');
+  // Use elementFromPoint to find the element under the cursor/finger
+  const target = document.elementFromPoint(event.clientX, event.clientY);
+  if (!target) return;
+
+  const bubble = target.closest('.bubble');
   if (!bubble) {
+    return;
+  }
+
+  // Ensure we are still interacting with the same sheet
+  if (!sheetEl.contains(bubble)) {
     return;
   }
 

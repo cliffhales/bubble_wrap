@@ -26,7 +26,7 @@ body {
 .wrapper {
   width: min(1200px, 100%);
   margin: 0 auto;
-  padding: 1.5rem clamp(1rem, 3vw, 2.5rem) 3rem;
+  padding: 1.5rem clamp(0.5rem, 3vw, 2.5rem) 3rem;
   display: flex;
   flex-direction: column;
   gap: 1.75rem;
@@ -181,8 +181,18 @@ body {
 }
 
 @media (max-width: 640px) {
+  .wrapper {
+    padding: 1rem 0.5rem;
+  }
+
+  .panel {
+    padding: 1rem;
+    border-radius: 20px;
+  }
+
   .sheet {
-    gap: 0.5rem;
-    border-radius: 16px;
+    gap: 0.35rem;
+    padding: 0.75rem;
+    border-radius: 20px;
   }
 }
