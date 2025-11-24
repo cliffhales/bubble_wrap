@@ -41,7 +41,7 @@ let audioContext;
 let variantIndex = 0;
 let currentDimensions = SIZE_VARIANTS[variantIndex];
 let gestureActive = false;
-let gestureShouldPop = true;
+let visitedBubbles = new Set();
 
 soundToggle.addEventListener('change', (event) => {
   soundEnabled = event.target.checked;
@@ -86,10 +86,20 @@ function handlePointerDown(event) {
   }
 
   gestureActive = true;
-  gestureShouldPop = !bubble.classList.contains('popped');
+  visitedBubbles.clear();
+
+  // Toggle the initial bubble
+  const shouldPop = !bubble.classList.contains('popped');
+  applyBubbleState(bubble, shouldPop);
+  visitedBubbles.add(bubble);
+
+  // Release pointer capture so elementFromPoint works correctly on Safari/Mac
+  if (bubble.hasPointerCapture(event.pointerId)) {
+    bubble.releasePointerCapture(event.pointerId);
+  }
+
   // Prevent default to avoid scrolling on touch devices while dragging on bubbles
   event.preventDefault();
-  applyBubbleState(bubble, gestureShouldPop);
 }
 
 function handlePointerDrag(event) {
@@ -111,11 +121,17 @@ function handlePointerDrag(event) {
     return;
   }
 
-  applyBubbleState(bubble, gestureShouldPop);
+  // Only toggle if we haven't visited this bubble in the current gesture
+  if (!visitedBubbles.has(bubble)) {
+    const shouldPop = !bubble.classList.contains('popped');
+    applyBubbleState(bubble, shouldPop);
+    visitedBubbles.add(bubble);
+  }
 }
 
 function endGesture() {
   gestureActive = false;
+  visitedBubbles.clear();
 }
 
 function applyBubbleState(bubble, shouldPop) {
@@ -162,7 +178,7 @@ function ensureAudioContext() {
   }
 
   if (audioContext.state === 'suspended') {
-    audioContext.resume();
+    audioContext.resume().catch(() => { });
   }
 
   return audioContext;
@@ -204,14 +220,29 @@ if ('serviceWorker' in navigator) {
 
 function primeAudioOnFirstInteraction() {
   const interactionEvents = ['pointerdown', 'touchstart', 'mousedown', 'keydown'];
+
+  const unlock = () => {
+    const ctx = ensureAudioContext();
+    if (ctx) {
+      // Play a silent buffer to unlock the audio context on iOS
+      const buffer = ctx.createBuffer(1, 1, 22050);
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      source.connect(ctx.destination);
+      source.start(0);
+
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+    }
+
+    interactionEvents.forEach((event) => {
+      window.removeEventListener(event, unlock, { capture: true });
+    });
+  };
+
   interactionEvents.forEach((eventName) => {
-    window.addEventListener(
-      eventName,
-      () => {
-        ensureAudioContext();
-      },
-      { once: true, passive: true }
-    );
+    window.addEventListener(eventName, unlock, { capture: true });
   });
 }
 
